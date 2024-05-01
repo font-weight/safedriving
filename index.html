@@ -1,0 +1,178 @@
+<!doctype html>
+
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width">
+	<title>Safe Driving Control</title>
+	<link rel="stylesheet" href="style.css">
+	<script src="js/jquery-3.7.1.slim.min.js"></script>
+	<script src="js/highcharts.js"></script>
+</head>
+
+<body>
+	<header></header>
+	<div class="wrap">
+		<div class="menu-btn"><svg id="Layer_1" version="1.1" viewBox="0 0 512 512" xml:space="preserve"
+				xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+				<g>
+					<g>
+						<path class="st0"
+							d="M381,190.9H131c-11,0-20-9-20-20s9-20,20-20h250c11,0,20,9,20,20S392,190.9,381,190.9z" />
+					</g>
+					<g>
+						<path class="st0"
+							d="M381,361.1H131c-11,0-20-9-20-20s9-20,20-20h250c11,0,20,9,20,20S392,361.1,381,361.1z" />
+					</g>
+					<g>
+						<path class="st0"
+							d="M381,276H131c-11,0-20-9-20-20s9-20,20-20h250c11,0,20,9,20,20S392,276,381,276z" />
+					</g>
+				</g>
+			</svg></div>
+		<div class="menu">
+
+			<nav class="menu-list">
+				<div id="main-page">Главная</div>
+				<!-- <div id="data-page">История нарушений</div> -->
+				<div id="scheme-page">Об устройстве</div>
+				<div id="about-us-page">О нас</div>
+			</nav>
+		</div>
+		<div class="content">
+			<div class="content-page main__page" id="main__page">
+				<div class="main_el cur_speed">
+					<h2>Текущая скорость:</h2>
+					 <span id="cur_speed">0</span> км/ч
+				</div>
+				<div class="main_el violation">
+					
+					<table class="viol_table">
+						<caption>История нарушений:</caption>
+						<tr>
+							<th class="table_first">№</th>
+							<th>Описание</th>
+							<th class="table_last">Количество</th>
+						</tr>
+						<tr>
+							<td class="table_first">1</td>
+							<td>Превышена скорость</td>
+							<td><span id="viol_1">0</span></td>
+						</tr>
+						<tr>
+							<td class="table_first">2</td>
+							<td>Заснул</td>
+							<td><span id="viol_2">0</span></td>
+						</tr>
+						<tr>
+							<td class="table_first">3</td>
+							<td>Съехал с маршрута</td>
+							<td><span id="viol_3">0</span></td>
+						</tr>
+					</table>
+					<div class="button7" id="button7">Сбросить</div>
+
+				</div>
+
+			</div>
+			<div class="content-page scheme__page">
+				<h1>Устройство Safe Driving Control</h1>
+				<div class="scheme-text">
+					<img class="scheme-img" src="scheme.png" alt="">
+					<p>&nbsp;&nbsp;&nbsp;&nbsp;Для подключения устройства необходимо датчик спидометра (1) соединить с проводом (2).</p>
+					<p>&nbsp;&nbsp;&nbsp;&nbsp;Чтобы посмотреть нарушения необходимо перейти в первую вкладку.</p>
+					<p>&nbsp;&nbsp;&nbsp;&nbsp;Для сброса истории нарушений необходимо нажать кнопку "Сбросить" в вышеупомянутой вкладке.</p>
+					
+				</div>
+			</div>
+			<!-- <div class="content-page data__page" id="data__page">
+				<div id="chart-temperature" class="container"></div>
+			</div> -->
+			<div class="content-page about-us__page">
+				<h1>О наc и нашей миссии</h1>
+				<p class="about-us_text">Автор проекта: <br>
+					&nbsp;&nbsp;&nbsp;&nbsp;Лидером и единственным участником "команды" whatever является студент первого курса Kozybayev University - Шабанов Александр.</p>
+				<p class="about-us_text">Цель проекта: <br>
+					&nbsp;&nbsp;&nbsp;&nbsp;Цель проекта заключается в уменьшении количества нарушений водителей, путем отслеживания скорости и других показателей, и дальнейшего оповещения уполномеченных лиц.</p>
+
+				<!-- <h2>Наша команда</h2>
+				<img src="photo-team.jpeg" alt=""> -->
+			</div>
+		</div>
+
+
+	</div>
+
+	<script>
+		function get_cur_speed() {
+			var request = new XMLHttpRequest();
+			request.open('GET', '/get_cur_speed', false);
+			request.send();
+			if (request.readyState == 4 && request.status == 200) {
+				var response = request.responseText;
+				document.getElementById('cur_speed').innerHTML = response;
+			}
+		}
+
+		function get_violations() {
+			var request = new XMLHttpRequest();
+			request.open('GET', '/get_violations', false);
+			request.send();
+			if (request.readyState == 4 && request.status == 200) {
+				var response = request.responseText;
+				document.getElementById('viol_1').innerHTML = response;
+			}
+		}
+
+		function reset_violations() {
+			var request = new XMLHttpRequest();
+			request.open('GET', '/reset_violations', false);
+			request.send();
+			if (request.readyState == 4 && request.status == 200) {
+				var response = request.responseText;
+				document.getElementById('viol_1').innerHTML = response;
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', function () {  // как только страница загрузится начинаем запрашивать данные 
+			
+		});
+
+		
+		// функционал по переключению между вкладками___________________________________________
+
+
+		$('.menu-btn').on('click', function () {	// кликаем на 'бургер' - выезжает меню
+			console.log("click");
+			$('.menu').toggleClass('menu_active');
+			$('.content').toggleClass('content_active');
+		})
+
+		$('#main-page').on('click', function () {
+			$('.content-page').css('display', 'none');
+			$('.main__page').css('display', 'flex');
+		})
+		$('#scheme-page').on('click', function () {
+			$('.content-page').css('display', 'none');
+			$('.scheme__page').css('display', 'block');
+		})
+		$('#data-page').on('click', function () {
+			$('.content-page').css('display', 'none');
+			$('.data__page').css('display', 'block');
+		})
+		$('#about-us-page').on('click', function () {
+			$('.content-page').css('display', 'none');
+			$('.about-us__page').css('display', 'block');
+		})
+		$('#button7').on('click', function () {
+			reset_violations();
+		})
+
+		setInterval(get_cur_speed, 1000);
+		setInterval(get_violations, 1000);
+
+	</script>
+</body>
+
+</html>
