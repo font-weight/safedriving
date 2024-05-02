@@ -4,7 +4,18 @@
 #include <SPI.h>
 #include <SD.h>
 
+#include "Wire.h" 
+#include "I2Cdev.h" 
+#include "MPU6050.h" 
+
 #define DBG_OUTPUT_PORT Serial
+
+MPU6050 accelgyro;
+
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
+
+bool blinkState = false;
 
 
 // ____________________Настройки_____________________________________
@@ -26,10 +37,12 @@ uint32_t last_time = 0;
 uint32_t filtered_period = 0;
 uint32_t cur_period = 0;
 float cur_speed = 0;
+float lateral_accel = 0;
 
 byte static_speed = 0;
 
 byte violations_val = 0;
+byte lateral_violations = 0;
 
 
 // ___________________________________________________________________
@@ -231,8 +244,23 @@ void get_violations() {
 
 void reset_violations() {
   violations_val = 0;
-  server.send(200, "text/plain", String(violations_val)); // отправляем ответ о выполнении
+  lateral_violations = 0;
+  server.send(200, "text/plain", String(violations_val + lateral_violations)); // отправляем ответ о выполнении
 }
+
+void get_cur_accel() {
+  server.send(200, "text/plain", String(lateral_accel)); // отправляем ответ о выполнении
+}
+
+
+void get_lateral_violations() {
+  server.send(200, "text/plain", String(lateral_violations)); // отправляем ответ о выполнении
+}
+
+// void reset_lateral_violations() {
+//   lateral_violations = 0;
+//   server.send(200, "text/plain", String(lateral_violations)); // отправляем ответ о выполнении
+// }
 
 void spdlst() {       // при прерывании выполнять код:
   if (millis() - debounce >= 30 && !digitalRead(13)) {
@@ -243,6 +271,21 @@ void spdlst() {       // при прерывании выполнять код:
 }
 
 void setup(void){
+  Wire.begin();
+  accelgyro.initialize();
+
+  DBG_OUTPUT_PORT.begin(115200);
+  DBG_OUTPUT_PORT.setDebugOutput(true);
+  DBG_OUTPUT_PORT.print("\n");
+  
+  Serial.println("Testing device connections..."); 
+  if (accelgyro.testConnection()) { 
+    Serial.println("MPU6050 connection successful"); 
+  } else { 
+    Serial.println("MPU6050 connection failed"); 
+    while (1); 
+  }
+
   pinMode(13, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(13), spdlst, FALLING);
 
@@ -265,9 +308,12 @@ void setup(void){
   server.on("/edit", HTTP_DELETE, handleDelete);
   server.on("/edit", HTTP_PUT, handleCreate);
   server.on("/edit", HTTP_POST, [](){ returnOK(); }, handleFileUpload);
-  server.on("/get_cur_speed", get_cur_speed);     // переключать состояние реле по запросу вида /get_cur_speed
-  server.on("/get_violations", get_violations);     // переключать состояние реле по запросу вида /get_violations
-  server.on("/reset_violations", reset_violations);     // переключать состояние реле по запросу вида /reset_violations
+  server.on("/get_cur_speed", get_cur_speed);     // получить текущую скорость по запросу вида /get_cur_speed
+  server.on("/get_violations", get_violations);     // получить количество превышений по запросу вида /get_violations
+  server.on("/reset_violations", reset_violations);     // сбросить нарушение скорости по запросу вида /reset_violations
+  server.on("/get_lateral_violations", get_lateral_violations);     // получить нарушения по перестроению по запросу
+  // server.on("/reset_lateral_violations", reset_lateral_violations);     // сбросить нарушение по перестроению по запросу
+  server.on("/get_cur_accel", get_cur_accel);     // получить текущее ускорение по запросу вида /get_cur_accel
   server.onNotFound(handleNotFound);
 
   server.begin();
@@ -290,7 +336,11 @@ void setup(void){
 
 void loop(void){
   server.handleClient();
-
+  accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz); 
+  lateral_accel = (float)ax / 1672;
+  if (fabs(lateral_accel) > 5.0) {
+    lateral_violations++;
+  }
 
   if (is_t) {
     filtered_period = filtered(last_period);
@@ -311,7 +361,7 @@ void loop(void){
       static_speed = 0;
       cur_speed = 0;
     }
-    Serial.println(cur_speed);
+    // Serial.println(cur_speed);
     if (cur_speed > max_speed) {      // если превысил скорость добовляем нарушение
       Serial.println("Нарушение!");
       violations_val++;
@@ -319,6 +369,7 @@ void loop(void){
     last_time = millis();
 
   }
+
 }
 
 
