@@ -254,6 +254,10 @@ header {
   border-radius: 10px;
 }
 
+.cur_accel {
+  height: fit-content;
+}
+
 .violation {
   flex: 0 1 66%;
   justify-content: start;
@@ -382,6 +386,12 @@ div.button7:hover { background: rgb(53, 167, 110); }
 div.button7:active {
   background: rgb(33,147,90);
   box-shadow: 0 3px rgb(33,147,90) inset;
+}
+
+@media (max-width: 800px) {
+  .main__page {
+    flex-direction: column;
+  }
 }
 
 

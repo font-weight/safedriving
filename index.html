@@ -62,19 +62,32 @@
 						</tr>
 						<tr>
 							<td class="table_first">2</td>
-							<td>Заснул</td>
+							<td>Играл в "шашки" (резко перестраивался)</td>
 							<td><span id="viol_2">0</span></td>
 						</tr>
 						<tr>
 							<td class="table_first">3</td>
-							<td>Съехал с маршрута</td>
+							<td>Заснул</td>
 							<td><span id="viol_3">0</span></td>
+						</tr>
+						<tr>
+							<td class="table_first">4</td>
+							<td>Съехал с маршрута</td>
+							<td><span id="viol_4">0</span></td>
 						</tr>
 					</table>
 					<div class="button7" id="button7">Сбросить</div>
 
 				</div>
 
+			</div>
+
+			<div class="content-page main__page" id="main__page">
+				<div class="main_el cur_accel">
+					<h2>Текущее ускорение:</h2>
+					<span id="cur_accel">0</span> м/с²
+					<img id="car_img" class="scheme-img" src="car.png" alt="">
+				</div>
 			</div>
 			<div class="content-page scheme__page">
 				<h1>Устройство Safe Driving Control</h1>
@@ -105,33 +118,66 @@
 	</div>
 
 	<script>
+		const myImg = document.getElementById('car_img');
 		function get_cur_speed() {
-			var request = new XMLHttpRequest();
+			let request = new XMLHttpRequest();
 			request.open('GET', '/get_cur_speed', false);
 			request.send();
 			if (request.readyState == 4 && request.status == 200) {
-				var response = request.responseText;
+				let response = request.responseText;
 				document.getElementById('cur_speed').innerHTML = response;
 			}
 		}
 
+		function get_cur_accel() {
+			let request = new XMLHttpRequest();
+			request.open('GET', '/get_cur_accel', false);
+			request.send();
+			if (request.readyState == 4 && request.status == 200) {
+				let response = Number.parseInt(request.responseText);
+				if (Math.abs(response) > 0.3) {
+					document.getElementById('cur_accel').innerHTML = response;
+					if (response > 0) {
+						myImg.src = 'car_l.png';
+					} else {
+						myImg.src = 'car_r.png';
+					}
+				} else {
+					myImg.src = 'car.png';
+					document.getElementById('cur_accel').innerHTML = 0;
+				}
+				
+			}
+		}
+
 		function get_violations() {
-			var request = new XMLHttpRequest();
+			let request = new XMLHttpRequest();
 			request.open('GET', '/get_violations', false);
 			request.send();
 			if (request.readyState == 4 && request.status == 200) {
-				var response = request.responseText;
+				let response = request.responseText;
 				document.getElementById('viol_1').innerHTML = response;
 			}
 		}
 
+		function get_lateral_violations() {
+			let request = new XMLHttpRequest();
+			request.open('GET', '/get_lateral_violations', false);
+			request.send();
+			if (request.readyState == 4 && request.status == 200) {
+				let response = request.responseText;
+				document.getElementById('viol_2').innerHTML = response;
+			}
+		}
+
 		function reset_violations() {
-			var request = new XMLHttpRequest();
+			let request = new XMLHttpRequest();
 			request.open('GET', '/reset_violations', false);
 			request.send();
 			if (request.readyState == 4 && request.status == 200) {
-				var response = request.responseText;
+				let response = request.responseText;
 				document.getElementById('viol_1').innerHTML = response;
+				document.getElementById('viol_2').innerHTML = response;
 			}
 		}
 
@@ -171,6 +217,9 @@
 
 		setInterval(get_cur_speed, 1000);
 		setInterval(get_violations, 1000);
+		setInterval(get_lateral_violations, 1000);
+		setInterval(get_cur_accel, 200);
+
 
 	</script>
 </body>
