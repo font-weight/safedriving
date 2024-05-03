@@ -34,6 +34,9 @@ volatile uint32_t debounce;
 
 uint32_t last_time = 0;
 
+uint32_t accel_timer = 0;
+uint32_t speed_timer = 0;
+
 uint32_t filtered_period = 0;
 uint32_t cur_period = 0;
 float cur_speed = 0;
@@ -338,8 +341,9 @@ void loop(void){
   server.handleClient();
   accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz); 
   lateral_accel = (float)ax / 1672;
-  if (fabs(lateral_accel) > 5.0) {
+  if (fabs((lateral_accel) > 5.0) and (millis() - accel_timer > 1000) ) {
     lateral_violations++;
+    accel_timer = millis();
   }
 
   if (is_t) {
@@ -362,9 +366,10 @@ void loop(void){
       cur_speed = 0;
     }
     // Serial.println(cur_speed);
-    if (cur_speed > max_speed) {      // если превысил скорость добовляем нарушение
-      Serial.println("Нарушение!");
+    if ((cur_speed > max_speed) and (millis() - speed_timer > 2000)) {      // если превысил скорость добовляем нарушение
+      // Serial.println("Нарушение!");
       violations_val++;
+      speed_timer = millis();
     }
     last_time = millis();
 
